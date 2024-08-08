@@ -19,7 +19,7 @@ locale                   : "ko-KR"
 rtl                      : # true, false (default) # turns direction of the page into right to left for RTL languages
 title                    : "Bnovkebin"
 title_separator          : "-"
-subtitle                 : # site tagline that appears below site title in masthead
+subtitle                 : "Be a good Hacker" # site tagline that appears below site title in masthead
 name                     : "Minkyun Sung"
 description              : "empty"
 url                      : "https://bnovkebin.github.io" # the base hostname & protocol for your site e.g. "https://mmistakes.github.io"
@@ -115,7 +115,7 @@ analytics:
 author:
   name             : "Minkyun Sung"
   avatar           : /assets/images/testimg.png # path of avatar image, e.g. "/assets/images/bio-photo.jpg"
-  bio              : "Be a good hacker\nbnovkebin@gmail.com"
+  bio              : "bnovkebin@gmail.com"
   location         : "South Korea"
   email            :
   links:
@@ -131,12 +131,12 @@ author:
     - label: "Facebook"
       icon: "fab fa-fw fa-facebook-square"
       # url: "https://facebook.com/"
-    - label: "GitHub"
-      icon: "fab fa-fw fa-github"
-      url: "https://github.com/bnovkebin"
     - label: "Instagram"
       icon: "fab fa-fw fa-instagram"
       url: "https://instagram.com/sungminkyun"
+    - label: "GitHub"
+      icon: "fab fa-fw fa-github"
+      url: "https://github.com/bnovkebin"
 
 # Site Footer
 footer:
