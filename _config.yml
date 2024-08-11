@@ -114,7 +114,7 @@ analytics:
 # Site Author
 author:
   name             : "Minkyun Sung"
-  avatar           : /assets/images/testimg.png # path of avatar image, e.g. "/assets/images/bio-photo.jpg"
+  avatar           : /assets/images/mypuppy.png # path of avatar image, e.g. "/assets/images/bio-photo.jpg"
   bio              : "bnovkebin@gmail.com"
   location         : "South Korea"
   email            :
