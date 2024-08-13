@@ -16,7 +16,7 @@ main:
   - title: "ABOUT ME"
     url: /ABOUT-ME/
   - title: "TAG"
-    url: /tag/
+    url: /tags/
   - title: "All Posts"
-    url: /posts/
+    url: /All\ Posts/
 
