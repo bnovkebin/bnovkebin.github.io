@@ -19,7 +19,7 @@ locale                   : "en-US"
 rtl                      : # true, false (default) # turns direction of the page into right to left for RTL languages
 title                    : ""
 title_separator          : "-"
-subtitle                 : "Be a good Hacker" # site tagline that appears below site title in masthead
+subtitle                 : "" # site tagline that appears below site title in masthead
 name                     : "Minkyun Sung"
 description              : "Be a good Hacker"
 url                      : "https://bnovkebin.github.io" # the base hostname & protocol for your site e.g. "https://mmistakes.github.io"
@@ -115,7 +115,7 @@ analytics:
 author:
   name             : "Minkyun Sung"
   avatar           : /assets/images/mypuppy.png # path of avatar image, e.g. "/assets/images/bio-photo.jpg"
-  bio              : 
+  bio              : "Be a good Hacker"
   location         : "South Korea"
   email            : 
   links:
