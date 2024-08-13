@@ -18,5 +18,5 @@ main:
   - title: "TAG"
     url: https://bnovkebin.github.io/tag/
   - title: "All Posts"
-    url: https://bnovkebin.github.io/posts/
+    url: /posts/
 
