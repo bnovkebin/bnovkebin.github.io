@@ -14,9 +14,9 @@ main:
   - title: "HOME"
     url: https://bnovkebin.github.io/
   - title: "ABOUT ME"
-    url: /ABOUT-ME/
+    url: https://bnovkebin.github.io/ABOUT-ME/
   - title: "TAG"
-    url: /tag/
+    url: https://bnovkebin.github.io/tag/
   - title: "All Posts"
-    url: /posts/
+    url: https://bnovkebin.github.io/posts/
 
