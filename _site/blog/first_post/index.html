@@ -10,8 +10,8 @@
   <head>
     <meta charset="utf-8">
 
-<!-- begin _includes/seo.html --><title>First_post -</title>
-<meta name="description" content="Front Matter   title: “Jekyll first post”\n This is my first post with github blog. I’ll share my interests in cyber security. My English skills aren’t very good, so if you find any errors, please don’t hesitate to tell me. categories: blog\n tags: jekyll\n 목차 toc: true\n toc_sticky: true\n  —">
+<!-- begin _includes/seo.html --><title>Hello World -</title>
+<meta name="description" content="Short info">
 
 
   <meta name="author" content="Minkyun Sung">
@@ -23,11 +23,11 @@
 <meta property="og:type" content="article">
 <meta property="og:locale" content="en_US">
 <meta property="og:site_name" content="">
-<meta property="og:title" content="First_post">
-<meta property="og:url" content="http://localhost:4000/first_post/">
+<meta property="og:title" content="Hello World">
+<meta property="og:url" content="http://localhost:4000/blog/first_post/">
 
 
-  <meta property="og:description" content="Front Matter   title: “Jekyll first post”\n This is my first post with github blog. I’ll share my interests in cyber security. My English skills aren’t very good, so if you find any errors, please don’t hesitate to tell me. categories: blog\n tags: jekyll\n 목차 toc: true\n toc_sticky: true\n  —">
+  <meta property="og:description" content="Short info">
 
 
 
@@ -46,7 +46,7 @@
   
 
 
-<link rel="canonical" href="http://localhost:4000/first_post/">
+<link rel="canonical" href="http://localhost:4000/blog/first_post/">
 
 
 
@@ -279,8 +279,8 @@
 
 
   <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
-    <meta itemprop="headline" content="First_post">
-    <meta itemprop="description" content="Front Mattertitle: “Jekyll first post”\nThis is my first post with github blog.I’ll share my interests in cyber security.My English skills aren’t very good, so if you find any errors, please don’t hesitate to tell me.categories: blog\ntags: jekyll\n목차toc: true\ntoc_sticky: true\n —">
+    <meta itemprop="headline" content="Hello World">
+    <meta itemprop="description" content="Short info">
     <meta itemprop="datePublished" content="2024-08-08T00:00:00+09:00">
     
 
@@ -288,7 +288,7 @@
       
         <header>
           <h1 id="page-title" class="page__title" itemprop="headline">
-            <a href="http://localhost:4000/first_post/" itemprop="url">First_post
+            <a href="http://localhost:4000/blog/first_post/" itemprop="url">Hello World
 </a>
           </h1>
           
@@ -314,18 +314,41 @@
 
       <section class="page__content" itemprop="text">
         
-        <h1 id="front-matter">Front Matter</h1>
-<hr />
-<p>title: “Jekyll first post”\n
-This is my first post with github blog.
-I’ll share my interests in cyber security.
-My English skills aren’t very good, so if you find any errors, please don’t hesitate to tell me.
-categories: blog\n
-tags: jekyll\n</p>
+          <aside class="sidebar__right sticky">
+            <nav class="toc">
+              <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> Index</h4></header>
+              <ul class="toc__menu"><li><a href="#short-info">Short info</a></li><li><a href="#목차">목차</a></li></ul>
+            </nav>
+          </aside>
+        
+        <h1 id="short-info">Short info</h1>
+
+<p>This is my first post with github blog. <br />
+I’ll share my interests in cyber security. <br />
+My English skills aren’t very good, so if you find any errors, please don’t hesitate to tell me. <br /></p>
+
+<p>The following are just some tests of Markdown usage, so you can ignore them. <br /></p>
+
 <h1 id="목차">목차</h1>
-<p>toc: true\n
-toc_sticky: true\n 
-—</p>
+
+<p><em>기울어진 텍스트</em> <br />
+<strong>굵은 텍스트</strong> <br />
+<strong><em>굵고 기울어진 텍스트</em></strong> <br />
+<del>취소된 텍스트</del> <br />
+<u>밑줄된 텍스트</u> <br />
+<span style="color:yellow">노란 글씨.</span></p>
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">let</span> <span class="nx">buffer</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">ArrayBuffer</span><span class="p">(</span><span class="mi">8</span><span class="p">);</span>
+<span class="kd">let</span> <span class="nx">f64</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Float64Array</span><span class="p">(</span><span class="nx">buffer</span><span class="p">);</span>
+<span class="kd">let</span> <span class="nx">u32</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Uint32Array</span><span class="p">(</span><span class="nx">buffer</span><span class="p">);</span>
+</code></pre></div></div>
+<p>링크주소만 있는 것: <br />
+<a href="https://bnovkebin.github.io">https://bnovkebin.github.io</a> <br />
+링크설명과 링크주소: <br />
+<a href="https://bnovkebin.github.io">bnovkebin블로그</a> <br />
+동일 파일에서 문단으로 이동: <br />
+<a href="#목차">목차로 이동</a> <br /></p>
+
+<p><img src="https://bnovkebin.github.io/assets/images/mypuppy.png" width="100px" height="100px" title="Mypuppy" /> <br /></p>
 
 
         
@@ -334,6 +357,21 @@ toc_sticky: true\n
       <footer class="page__meta">
         
         
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/#blog" class="page__taxonomy-item p-category" rel="tag">blog</a>
+    
+    </span>
+  </p>
 
 
         
@@ -347,15 +385,25 @@ toc_sticky: true\n
     <h4 class="page__share-title">Share on</h4>
   
 
-  <a href="https://twitter.com/intent/tweet?text=First_post%20http%3A%2F%2Flocalhost%3A4000%2Ffirst_post%2F" class="btn btn--twitter" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Twitter"><i class="fab fa-fw fa-twitter" aria-hidden="true"></i><span> Twitter</span></a>
+  <a href="https://twitter.com/intent/tweet?text=Hello+World%20http%3A%2F%2Flocalhost%3A4000%2Fblog%2Ffirst_post%2F" class="btn btn--twitter" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Twitter"><i class="fab fa-fw fa-twitter" aria-hidden="true"></i><span> Twitter</span></a>
 
-  <a href="https://www.facebook.com/sharer/sharer.php?u=http%3A%2F%2Flocalhost%3A4000%2Ffirst_post%2F" class="btn btn--facebook" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Facebook"><i class="fab fa-fw fa-facebook" aria-hidden="true"></i><span> Facebook</span></a>
+  <a href="https://www.facebook.com/sharer/sharer.php?u=http%3A%2F%2Flocalhost%3A4000%2Fblog%2Ffirst_post%2F" class="btn btn--facebook" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Facebook"><i class="fab fa-fw fa-facebook" aria-hidden="true"></i><span> Facebook</span></a>
 
-  <a href="https://www.linkedin.com/shareArticle?mini=true&url=http://localhost:4000/first_post/" class="btn btn--linkedin" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span></a>
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=http://localhost:4000/blog/first_post/" class="btn btn--linkedin" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span></a>
 </section>
 
 
       
+  <nav class="pagination">
+    
+      <a href="#" class="pagination--pager disabled">Previous</a>
+    
+    
+      <a href="/blog/second_post/" class="pagination--pager" title="Second post with Front-Matter
+">Next</a>
+    
+  </nav>
+
     </div>
 
     
@@ -370,9 +418,47 @@ toc_sticky: true\n
   <div class="grid__wrapper">
     
       
+      
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/blog/second_post/" rel="permalink">Second post with Front-Matter
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+      
+      <span class="page__meta-date">
+        <i class="far fa-calendar-alt" aria-hidden="true"></i>
+        
+        <time datetime="2024-08-13T00:00:00+09:00">August 13, 2024</time>
+      </span>
+    
+
+    
+
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">이 내용은 글 목록에서 보이는 설명이다.
+</p>
+  </article>
+</div>
+
+    
   </div>
 </div>
 
+  
   
 </div>
 
@@ -450,8 +536,8 @@ toc_sticky: true\n
     
   <script>
     var disqus_config = function () {
-      this.page.url = "http://localhost:4000/first_post/";  /* Replace PAGE_URL with your page's canonical URL variable */
-      this.page.identifier = "/first_post"; /* Replace PAGE_IDENTIFIER with your page's unique identifier variable */
+      this.page.url = "http://localhost:4000/blog/first_post/";  /* Replace PAGE_URL with your page's canonical URL variable */
+      this.page.identifier = "/blog/first_post"; /* Replace PAGE_IDENTIFIER with your page's unique identifier variable */
     };
     (function() { /* DON'T EDIT BELOW THIS LINE */
       var d = document, s = d.createElement('script');

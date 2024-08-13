@@ -1,12 +1,32 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.3.3">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2024-08-13T23:23:23+09:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">Minkyun Sung</title><subtitle>Be a good Hacker</subtitle><author><name>Minkyun Sung</name></author><entry><title type="html">First_post</title><link href="http://localhost:4000/first_post/" rel="alternate" type="text/html" title="First_post" /><published>2024-08-08T00:00:00+09:00</published><updated>2024-08-08T00:00:00+09:00</updated><id>http://localhost:4000/first_post</id><content type="html" xml:base="http://localhost:4000/first_post/"><![CDATA[<h1 id="front-matter">Front Matter</h1>
-<hr />
-<p>title: “Jekyll first post”\n
-This is my first post with github blog.
-I’ll share my interests in cyber security.
-My English skills aren’t very good, so if you find any errors, please don’t hesitate to tell me.
-categories: blog\n
-tags: jekyll\n</p>
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.3.3">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2024-08-14T00:50:30+09:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">Minkyun Sung</title><subtitle>Be a good Hacker</subtitle><author><name>Minkyun Sung</name></author><entry><title type="html">Second post with Front-Matter</title><link href="http://localhost:4000/blog/second_post/" rel="alternate" type="text/html" title="Second post with Front-Matter" /><published>2024-08-13T00:00:00+09:00</published><updated>2024-08-14T00:00:00+09:00</updated><id>http://localhost:4000/blog/second_post</id><content type="html" xml:base="http://localhost:4000/blog/second_post/"><![CDATA[<h1 id="1-first-index">1. first index</h1>
+<p>hi~ <br />
+2~~ <br /></p>
+<h2 id="1-1-index">1-1. index</h2>
+<h1 id="2-second-index">2. second index</h1>]]></content><author><name>Minkyun Sung</name></author><category term="Blog" /><category term="Blog" /><category term="jekyll" /><category term="Github" /><category term="Git" /><summary type="html"><![CDATA[이 내용은 글 목록에서 보이는 설명이다.]]></summary></entry><entry><title type="html">Hello World</title><link href="http://localhost:4000/blog/first_post/" rel="alternate" type="text/html" title="Hello World" /><published>2024-08-08T00:00:00+09:00</published><updated>2024-08-08T00:00:00+09:00</updated><id>http://localhost:4000/blog/first_post</id><content type="html" xml:base="http://localhost:4000/blog/first_post/"><![CDATA[<h1 id="short-info">Short info</h1>
+
+<p>This is my first post with github blog. <br />
+I’ll share my interests in cyber security. <br />
+My English skills aren’t very good, so if you find any errors, please don’t hesitate to tell me. <br /></p>
+
+<p>The following are just some tests of Markdown usage, so you can ignore them. <br /></p>
+
 <h1 id="목차">목차</h1>
-<p>toc: true\n
-toc_sticky: true\n 
-—</p>]]></content><author><name>Minkyun Sung</name></author><summary type="html"><![CDATA[Front Matter title: “Jekyll first post”\n This is my first post with github blog. I’ll share my interests in cyber security. My English skills aren’t very good, so if you find any errors, please don’t hesitate to tell me. categories: blog\n tags: jekyll\n 목차 toc: true\n toc_sticky: true\n —]]></summary></entry></feed>
+
+<p><em>기울어진 텍스트</em> <br />
+<strong>굵은 텍스트</strong> <br />
+<strong><em>굵고 기울어진 텍스트</em></strong> <br />
+<del>취소된 텍스트</del> <br />
+<u>밑줄된 텍스트</u> <br />
+<span style="color:yellow">노란 글씨.</span></p>
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">let</span> <span class="nx">buffer</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">ArrayBuffer</span><span class="p">(</span><span class="mi">8</span><span class="p">);</span>
+<span class="kd">let</span> <span class="nx">f64</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Float64Array</span><span class="p">(</span><span class="nx">buffer</span><span class="p">);</span>
+<span class="kd">let</span> <span class="nx">u32</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Uint32Array</span><span class="p">(</span><span class="nx">buffer</span><span class="p">);</span>
+</code></pre></div></div>
+<p>링크주소만 있는 것: <br />
+<a href="https://bnovkebin.github.io">https://bnovkebin.github.io</a> <br />
+링크설명과 링크주소: <br />
+<a href="https://bnovkebin.github.io">bnovkebin블로그</a> <br />
+동일 파일에서 문단으로 이동: <br />
+<a href="#목차">목차로 이동</a> <br /></p>
+
+<p><img src="https://bnovkebin.github.io/assets/images/mypuppy.png" width="100px" height="100px" title="Mypuppy" /> <br /></p>]]></content><author><name>Minkyun Sung</name></author><category term="blog" /><summary type="html"><![CDATA[Short info]]></summary></entry></feed>
