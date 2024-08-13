@@ -6,8 +6,8 @@ var store = [{
         "teaser": null
       },{
         "title": "Second post with Front-Matter",
-        "excerpt":"1. first index  hi~   2~~    1-1. index  2. second index   ","categories": ["Blog"],
-        "tags": ["Blog","jekyll","Github","Git"],
+        "excerpt":"1. first index  hi~   2~~    1-1. index  2. second index   ","categories": ["blog"],
+        "tags": ["jekyll","github","git"],
         "url": "/blog/second_post/",
         "teaser": null
       }]

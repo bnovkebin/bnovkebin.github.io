@@ -11,12 +11,21 @@ main:
   # - title: "Sitemap"
   #   url: /sitemap/
 
-  - title: "HOME"
+  - title: "Home"
     url: https://bnovkebin.github.io/
-  - title: "ABOUT ME"
+  - title: "About Me"
     url: /ABOUT-ME/
-  - title: "TAG"
-    url: /tags/
+#  - title: "Tag"
+#    url: /tags/
+#  - title: "Category"
+#    url: /categories/
   - title: "All Posts"
     url: /All-Posts/
 
+docs:
+  - title: Posts by
+    children:
+      - title: Tags
+        url: /tags/
+      - title: Categories
+        url: /categories/

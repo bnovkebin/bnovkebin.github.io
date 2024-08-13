@@ -1,7 +1,9 @@
-# ABOUT-ME.md
 ---
 title: "ABOUT-ME"
 permalink: /ABOUT-ME/
-layout: posts
+layout: single
 author_profile: true
 ---
+
+It is currently empty. <br>
+Over time, it will be filled with various careers and experiences. <br>

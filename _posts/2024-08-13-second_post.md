@@ -3,9 +3,9 @@ title:  "Second post with Front-Matter"
 excerpt: "이 내용은 글 목록에서 보이는 설명이다."
 
 categories:
-  - Blog
+  - blog
 tags:
-  - [Blog, jekyll, Github, Git]
+  - [jekyll, github, git]
 
 toc: true //activate index on right side bar
 toc_sticky: true //right side bar follows always

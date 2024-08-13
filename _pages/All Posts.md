@@ -1,4 +1,3 @@
-# All\ Posts.md
 ---
 title: "All Posts"
 permalink: /All-Posts/
