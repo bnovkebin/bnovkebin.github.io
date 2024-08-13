@@ -1,10 +1,10 @@
 # Front Matter
 ---
-title: "Jekyll 첫번째 글"
-categories: blog
-tags: jekyll
+title: "Jekyll 첫번째 글"\n
+categories: blog\n
+tags: jekyll\n
 # 목차
-toc: true  
-toc_sticky: true 
+toc: true\n
+toc_sticky: true\n 
 ---
 
