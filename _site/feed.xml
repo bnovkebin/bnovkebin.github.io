@@ -1,7 +1,9 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.3.3">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2024-08-14T19:07:39+09:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">Minkyun Sung</title><subtitle>Be a good Hacker</subtitle><author><name>Minkyun Sung</name><email>bnovkebin@gmail.com</email></author><entry><title type="html">CVE-2024-0517 Chrome V8 Out of Bounds Write</title><link href="http://localhost:4000/blog/CVE-2024-0517/" rel="alternate" type="text/html" title="CVE-2024-0517 Chrome V8 Out of Bounds Write" /><published>2024-08-14T00:00:00+09:00</published><updated>2024-08-14T00:00:00+09:00</updated><id>http://localhost:4000/blog/CVE-2024-0517</id><content type="html" xml:base="http://localhost:4000/blog/CVE-2024-0517/"><![CDATA[<h1 id="introduction">Introduction</h1>
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.3.3">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2024-08-14T23:12:02+09:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">Minkyun Sung</title><subtitle>Be a good Hacker</subtitle><author><name>Minkyun Sung</name><email>bnovkebin@gmail.com</email></author><entry><title type="html">CVE-2024-0517 Chrome V8 Out of Bounds Write</title><link href="http://localhost:4000/blog/CVE-2024-0517/" rel="alternate" type="text/html" title="CVE-2024-0517 Chrome V8 Out of Bounds Write" /><published>2024-08-14T00:00:00+09:00</published><updated>2024-08-14T00:00:00+09:00</updated><id>http://localhost:4000/blog/CVE-2024-0517</id><content type="html" xml:base="http://localhost:4000/blog/CVE-2024-0517/"><![CDATA[<p><br /></p>
+<h1 id="introduction">Introduction</h1>
 <p>In this blog, we look into a vulnerability in Chrome V8, CVE-2024-0517. This vulnerability occurs when Maglev, the JIT compiler of V8, compiles a class that has a parent class. <br />
 Since I’m a beginner in the cybersecurity field and this is my first time analyzing a 1-day exploit, I had a lot of difficulty understanding it. Therefore, I’ll explain this vulnerability step by step. <br /></p>
 
+<p><br /></p>
 <h1 id="environment-configuration">Environment Configuration</h1>
 <p>The version that I used is as follows:
 <a href="https://chromium.googlesource.com/v8/v8.git/+/e73f620c2ef1230ddaa61551706225821a87c3b9">chrome v8 12.0.267.15</a> <br /></p>
@@ -29,22 +31,116 @@ Since I’m a beginner in the cybersecurity field and this is my first time anal
 <span class="nx">echo</span> <span class="dl">'</span><span class="s1">source ~/v8/tools/gdbinit</span><span class="dl">'</span> <span class="o">&gt;&gt;</span> <span class="o">~</span><span class="sr">/.gdbini</span><span class="err">t
 </span></code></pre></div></div>
 
+<p><br /></p>
 <h1 id="preliminary-knowledge">Preliminary Knowledge</h1>
-<ol>
-  <li>사전 지식 <br /></li>
-</ol>
+<p>In this section I’ll explain some essential preliminary knowledges needed to understand vulnerability. <br />
+The first three points are very important, and the remaining content helps in understanding the entire vulnerability by being aware of the memory structure. <br /></p>
 
+<h2 id="v8-engine">V8 engine</h2>
+<center> <img src="https://www.fhinkel.rocks/assets/blog/Understanding-V8-s-Bytecode/img2.png" width="70%" height="70%" title="git_diff" /> </center>
+<center> <img src="https://www.phoronix.net/image.php?id=2023&amp;image=maglev" width="70%" height="70%" title="git_diff" /> </center>
+<p>V8 is composed of various components such as Ignition, Maglev. I organized some features about them.</p>
+<ul>
+  <li>Parser    : converts Javascript code to AST structure</li>
+  <li>Ignition  : coverts AST structure to bytecode directly when code executes</li>
+  <li>Sparkplug : compile and optimize bytecode without any analysis</li>
+  <li>Maglev    : compile and optimize bytecode with static analysis</li>
+  <li>Turbofan  : compile and optimize bytecode with dynamic analysis
+The purpose of optimizing code is to ensure that subsequent executions are faster because the generated code will be reused in future calls.</li>
+</ul>
+
+<p>In the <a href="#Vulnerability-Exploitation-Flow">Vulnerability Exploitation Flow section</a>, I’ll outline the process leading to the weak point.</p>
+
+<h2 id="allocation-folding">Allocation Folding</h2>
+<center> <img src="https://github.com/user-attachments/assets/d8b42923-9971-43b3-9744-079a47909f5a" title="allocation_folding" /> </center>
+<p>Allocation Folding is a technique that improves performance and reduces memory overhead. It folds multiple allocation to a single one, so next allocation will be positioned with the offset by first allocation(AllocateRaw node). For example, if there are two allocations with amounts of 12 bytes and 88 bytes, Maglev folds them to one allocation with 100 bytes and the second allocation will be allocated on FirstAllocate_addr+12 (because the first requests 12 bytes).</p>
+
+<h2 id="garbage-collection">Garbage Collection</h2>
+<center> <img src="https://github.com/user-attachments/assets/0013d02f-cd2b-4474-aa0f-887ec73991b1" title="v8_heap_structure" /> </center>
+<p><br /> 
+Garbage Collection is a memory management process that frees object without any reference. <br />
+In v8 there are two Garbage collector, minor GC and major GC. If semi-space(from-space) is filled fully, minor GC runs and frees needless object. Conversely, it is applied in the same way. And if an object survives after running twice of garbage collection, it will be moved into old space. <br /></p>
+
+<p>I recommend to read this blog that is perfect to learn about garbage collection.
+<a href="https://deepu.tech/memory-management-in-v8/">https://deepu.tech/memory-management-in-v8/</a></p>
+
+<p><br /></p>
 <h1 id="the-vulnerability">The Vulnerability</h1>
-<ol>
-  <li>취약점 <br /></li>
-</ol>
+<p>When V8 compiles a derived class, the current_raw_allocation pointer is not initialized, leading to unintended memory allocation and potentially causing an out-of-bounds(OOB) write. <br />
+The above content means that v8 calls VisitFindNonDefaultConstructorOrConstruct function. <br />
+<br />
+The Proof of Concept code is on <a href="">here</a>
+<br />
+If you run this code, it results :</p>
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">$</span> <span class="o">~/</span><span class="n">v8</span><span class="o">/</span><span class="n">out</span><span class="err">$</span> <span class="p">.</span><span class="o">/</span><span class="n">debug</span><span class="o">/</span><span class="n">d8</span> <span class="o">--</span><span class="n">max</span><span class="o">-</span><span class="n">opt</span><span class="o">=</span><span class="mi">2</span> <span class="o">--</span><span class="n">allow</span><span class="o">-</span><span class="n">natives</span><span class="o">-</span><span class="n">syntax</span> <span class="o">--</span><span class="n">expose</span><span class="o">-</span><span class="n">gc</span> <span class="o">--</span><span class="n">jit</span><span class="o">-</span><span class="n">fuzzing</span> <span class="p">.</span><span class="o">/</span><span class="n">code0810</span><span class="o">/</span><span class="n">poc</span><span class="p">.</span><span class="n">js</span>
 
-<p>This vulnerability was patched in version 12.0.267.16. You can verify this using <strong>“git diff”</strong>. <br /></p>
+<span class="cp">#
+# Fatal error in ../../src/objects/free-space-inl.h, line 75
+# Check failed: !heap-&gt;deserialization_complete() || map_slot().contains_map_value(free_space_map.ptr()).
+#
+#
+#
+#FailureMessage Object: 0x7ffcb71ef328
+</span><span class="o">====</span> <span class="n">C</span> <span class="n">stack</span> <span class="n">trace</span> <span class="o">===============================</span>
 
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>git diff fbc4963bbff79ae2ef36821f870295f488cb497b e73f620c2ef1230ddaa61551706225821a87c3b9
+    <span class="p">.</span><span class="o">/</span><span class="n">debug</span><span class="o">/</span><span class="n">d8</span><span class="p">(</span><span class="n">v8</span><span class="o">::</span><span class="n">base</span><span class="o">::</span><span class="n">debug</span><span class="o">::</span><span class="n">StackTrace</span><span class="o">::</span><span class="n">StackTrace</span><span class="p">()</span><span class="o">+</span><span class="mh">0x1e</span><span class="p">)</span> <span class="p">[</span><span class="mh">0x5be5e179afde</span><span class="p">]</span>
+    <span class="p">.</span><span class="o">/</span><span class="n">debug</span><span class="o">/</span><span class="n">d8</span><span class="p">(</span><span class="o">+</span><span class="mh">0x8c0960d</span><span class="p">)</span> <span class="p">[</span><span class="mh">0x5be5e179560d</span><span class="p">]</span>
+    <span class="p">.</span><span class="o">/</span><span class="n">debug</span><span class="o">/</span><span class="n">d8</span><span class="p">(</span><span class="n">V8_Fatal</span><span class="p">(</span><span class="kt">char</span> <span class="k">const</span><span class="o">*</span><span class="p">,</span> <span class="kt">int</span><span class="p">,</span> <span class="kt">char</span> <span class="k">const</span><span class="o">*</span><span class="p">,</span> <span class="p">...)</span><span class="o">+</span><span class="mh">0x1ac</span><span class="p">)</span> <span class="p">[</span><span class="mh">0x5be5e176b53c</span><span class="p">]</span>
+    <span class="p">.</span><span class="o">/</span><span class="n">debug</span><span class="o">/</span><span class="n">d8</span><span class="p">(</span><span class="n">v8</span><span class="o">::</span><span class="n">internal</span><span class="o">::</span><span class="n">FreeSpace</span><span class="o">::</span><span class="n">IsValid</span><span class="p">()</span> <span class="k">const</span><span class="o">+</span><span class="mh">0xdf</span><span class="p">)</span> <span class="p">[</span><span class="mh">0x5be5dde6ceef</span><span class="p">]</span>
+    <span class="p">.</span><span class="o">/</span><span class="n">debug</span><span class="o">/</span><span class="n">d8</span><span class="p">(</span><span class="n">v8</span><span class="o">::</span><span class="n">internal</span><span class="o">::</span><span class="n">FreeSpace</span><span class="o">::</span><span class="n">next</span><span class="p">()</span> <span class="k">const</span><span class="o">+</span><span class="mh">0x1d</span><span class="p">)</span> <span class="p">[</span><span class="mh">0x5be5dde6baad</span><span class="p">]</span>
 </code></pre></div></div>
-<p><img src="https://bnovkebin.github.io/_posts/2024/20240814/git_diff.png" width="100px" height="100px" title="git_diff" /> <br />
-<img src="./git_diff.png" width="100px" height="100px" title="git_diff" /> <br /></p>
+<p><br />
+If you want :</p>
+<ul>
+  <li>Debugging =&gt; ./debug/d8 (option) ./code/poc.js</li>
+  <li>Release   =&gt; ./x64.release/d8 (option) ./code/poc.js</li>
+</ul>
+
+<p>I frequently use options like :</p>
+<ul>
+  <li>–allow-natives-syntax =&gt; allow using debugging symbol</li>
+  <li>–print-maglev-graph =&gt; show maglev-IR-graph that maglev has compiled</li>
+</ul>
+
+<p>(other options : –max-opt=2 –expose-gc –jit-fuzzing) <br /></p>
+
+<p>If you set a breakpoint before allocate array a and after that, you can see the memory corrupt by allocation folding of array a. <br /></p>
+
+<h2 id="extendorreallocatecurrentrawallocation">ExtendOrReallocateCurrentRawAllocation</h2>
+<p>This function represents methods to do allocation folding with <strong>“current_raw_allocation”</strong> pointer.</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/* src/maglev/maglev-graph-builder.cc:8520 */</span>
+<span class="n">ValueNode</span><span class="o">*</span> <span class="n">MaglevGraphBuilder</span><span class="o">::</span><span class="n">ExtendOrReallocateCurrentRawAllocation</span><span class="p">(</span>
+    <span class="kt">int</span> <span class="n">size</span><span class="p">,</span> <span class="n">AllocationType</span> <span class="n">allocation_type</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">current_raw_allocation_</span> <span class="o">||</span>
+      <span class="n">current_raw_allocation_</span><span class="o">-&gt;</span><span class="n">allocation_type</span><span class="p">()</span> <span class="o">!=</span> <span class="n">allocation_type</span> <span class="o">||</span>
+      <span class="o">!</span><span class="n">v8_flags</span><span class="p">.</span><span class="n">inline_new</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">current_raw_allocation_</span> <span class="o">=</span>
+        <span class="n">AddNewNode</span><span class="o">&lt;</span><span class="n">AllocateRaw</span><span class="o">&gt;</span><span class="p">({},</span> <span class="n">allocation_type</span><span class="p">,</span> <span class="n">size</span><span class="p">);</span>
+    <span class="k">return</span> <span class="n">current_raw_allocation_</span><span class="p">;</span>
+  <span class="p">}</span>
+  <span class="kt">int</span> <span class="n">current_size</span> <span class="o">=</span> <span class="n">current_raw_allocation_</span><span class="o">-&gt;</span><span class="n">size</span><span class="p">();</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">current_size</span> <span class="o">+</span> <span class="n">size</span> <span class="o">&gt;</span> <span class="n">kMaxRegularHeapObjectSize</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">current_raw_allocation_</span> <span class="o">=</span>
+               <span class="n">AddNewNode</span><span class="o">&lt;</span><span class="n">AllocateRaw</span><span class="o">&gt;</span><span class="p">({},</span> <span class="n">allocation_type</span><span class="p">,</span> <span class="n">size</span><span class="p">);</span>
+  <span class="p">}</span>
+  <span class="n">DCHECK_GT</span><span class="p">(</span><span class="n">current_size</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+  <span class="kt">int</span> <span class="n">previous_end</span> <span class="o">=</span> <span class="n">current_size</span><span class="p">;</span>
+  <span class="n">current_raw_allocation_</span><span class="o">-&gt;</span><span class="n">extend</span><span class="p">(</span><span class="n">size</span><span class="p">);</span>
+  <span class="k">return</span> <span class="n">AddNewNode</span><span class="o">&lt;</span><span class="n">FoldedAllocation</span><span class="o">&gt;</span><span class="p">({</span><span class="n">current_raw_allocation_</span><span class="p">},</span> <span class="n">previous_end</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h2 id="patch">Patch</h2>
+<p>To prevent this weakness, initialization of that pointer has been added to the source code.
+This vulnerability was patched in version 12.0.267.16. You can verify this using <strong>“git diff”</strong>. <br /></p>
+
+<pre><code class="language-linux">git diff fbc4963bbff79ae2ef36821f870295f488cb497b e73f620c2ef1230ddaa61551706225821a87c3b9
+</code></pre>
+
+<center> <img src="https://github.com/user-attachments/assets/61e0a27d-596c-49a7-82d8-e66a0c17f294" title="git_diff" /> </center>
+
+<p><br /></p>
 <h1 id="vulnerability-exploitation-flow">Vulnerability Exploitation Flow</h1>
 <ol>
   <li>취약점 흐름 <br /></li>
@@ -114,4 +210,6 @@ My English skills aren’t very good, so if you find any errors, please don’t 
 동일 파일에서 문단으로 이동: <br />
 <a href="#목차">목차로 이동</a> <br /></p>
 
-<p><img src="https://bnovkebin.github.io/assets/images/mypuppy.png" width="100px" height="100px" title="Mypuppy" /> <br /></p>]]></content><author><name>Minkyun Sung</name><email>bnovkebin@gmail.com</email></author><category term="blog" /><summary type="html"><![CDATA[Short info]]></summary></entry></feed>
+<p><img src="https://bnovkebin.github.io/assets/images/mypuppy.png" width="100px" height="100px" title="Mypuppy" /> <br /></p>
+
+<p><img src="https://bnovkebin.github.io/assets/images/mypuppy.png" alt="git_diff" /></p>]]></content><author><name>Minkyun Sung</name><email>bnovkebin@gmail.com</email></author><category term="blog" /><summary type="html"><![CDATA[Short info]]></summary></entry></feed>

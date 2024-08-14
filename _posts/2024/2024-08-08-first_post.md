@@ -38,4 +38,7 @@ let u32 = new Uint32Array(buffer);
 
 <img src="https://bnovkebin.github.io/assets/images/mypuppy.png" width="100px" height="100px" title="Mypuppy"/> <br>
 
+![git_diff](https://bnovkebin.github.io/assets/images/mypuppy.png)
+
+
 
