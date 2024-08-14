@@ -10,4 +10,10 @@ var store = [{
         "tags": ["jekyll","github","git"],
         "url": "/blog/second_post/",
         "teaser": null
+      },{
+        "title": "CVE-2024-0517 Chrome V8 Out of Bounds Write",
+        "excerpt":"Introduction In this blog, we look into a vulnerability in Chrome V8, CVE-2024-0517. This vulnerability occurs when Maglev, the JIT compiler of V8, compiles a class that has a parent class. Since I’m a beginner in the cybersecurity field and this is my first time analyzing a 1-day exploit, I...","categories": ["blog"],
+        "tags": ["1-day","chrome","v8"],
+        "url": "/blog/CVE-2024-0517/",
+        "teaser": null
       }]
