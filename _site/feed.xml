@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.3.3">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2024-08-14T23:23:04+09:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">Minkyun Sung</title><subtitle>Be a good Hacker</subtitle><author><name>Minkyun Sung</name><email>bnovkebin@gmail.com</email></author><entry><title type="html">CVE-2024-0517 Chrome V8 Out of Bounds Write</title><link href="http://localhost:4000/blog/CVE-2024-0517/" rel="alternate" type="text/html" title="CVE-2024-0517 Chrome V8 Out of Bounds Write" /><published>2024-08-14T00:00:00+09:00</published><updated>2024-08-14T00:00:00+09:00</updated><id>http://localhost:4000/blog/CVE-2024-0517</id><content type="html" xml:base="http://localhost:4000/blog/CVE-2024-0517/"><![CDATA[<p><br /></p>
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.3.3">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2024-08-14T23:31:11+09:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">Minkyun Sung</title><subtitle>Be a good Hacker</subtitle><author><name>Minkyun Sung</name><email>bnovkebin@gmail.com</email></author><entry><title type="html">CVE-2024-0517 Chrome V8 Out of Bounds Write</title><link href="http://localhost:4000/blog/CVE-2024-0517/" rel="alternate" type="text/html" title="CVE-2024-0517 Chrome V8 Out of Bounds Write" /><published>2024-08-14T00:00:00+09:00</published><updated>2024-08-14T00:00:00+09:00</updated><id>http://localhost:4000/blog/CVE-2024-0517</id><content type="html" xml:base="http://localhost:4000/blog/CVE-2024-0517/"><![CDATA[<p><br /></p>
 <h1 id="introduction">Introduction</h1>
 <p>In this blog, we look into a vulnerability in Chrome V8, CVE-2024-0517. This vulnerability occurs when Maglev, the JIT compiler of V8, compiles a class that has a parent class. <br />
 Since I’m a beginner in the cybersecurity field and this is my first time analyzing a 1-day exploit, I had a lot of difficulty understanding it. Therefore, I’ll explain this vulnerability step by step. <br /></p>
@@ -6,7 +6,7 @@ Since I’m a beginner in the cybersecurity field and this is my first time anal
 <p><br /></p>
 <h1 id="environment-configuration">Environment Configuration</h1>
 <p>The version that I used is as follows:
-<a href="https://chromium.googlesource.com/v8/v8.git/+/e73f620c2ef1230ddaa61551706225821a87c3b9">chrome v8 12.0.267.15</a> <br /></p>
+<a href="https://chromium.googlesource.com/v8/v8.git/+/e73f620c2ef1230ddaa61551706225821a87c3b9" target="_blank">chrome v8 12.0.267.15</a> <br /></p>
 
 <div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">#</span> <span class="nx">install</span> <span class="nx">depot_tools</span>
 <span class="nx">cd</span> <span class="o">~</span>
@@ -49,7 +49,7 @@ The first three points are very important, and the remaining content helps in un
 The purpose of optimizing code is to ensure that subsequent executions are faster because the generated code will be reused in future calls.</li>
 </ul>
 
-<p>In the <a href="#Vulnerability-Exploitation-Flow">Vulnerability Exploitation Flow section</a>, I’ll outline the process leading to the weak point.</p>
+<p>In the Vulnerability Exploitation Flow section, I’ll outline the process leading to the weak point.</p>
 
 <h2 id="allocation-folding">Allocation Folding</h2>
 <center> <img src="https://github.com/user-attachments/assets/d8b42923-9971-43b3-9744-079a47909f5a" title="allocation_folding" /> </center>
@@ -62,14 +62,14 @@ Garbage Collection is a memory management process that frees object without any 
 In v8 there are two Garbage collector, minor GC and major GC. If semi-space(from-space) is filled fully, minor GC runs and frees needless object. Conversely, it is applied in the same way. And if an object survives after running twice of garbage collection, it will be moved into old space. <br /></p>
 
 <p>I recommend to read this blog that is perfect to learn about garbage collection.
-<a href="https://deepu.tech/memory-management-in-v8/">https://deepu.tech/memory-management-in-v8/</a></p>
+<a href="https://deepu.tech/memory-management-in-v8/" target="_blank">https://deepu.tech/memory-management-in-v8/</a></p>
 
 <p><br /></p>
 <h1 id="the-vulnerability">The Vulnerability</h1>
 <p>When V8 compiles a derived class, the current_raw_allocation pointer is not initialized, leading to unintended memory allocation and potentially causing an out-of-bounds(OOB) write. <br />
 The above content means that v8 calls VisitFindNonDefaultConstructorOrConstruct function. About this function I’ll explain in Vulnerability Exploitation Flow section. <br />
 <br />
-The Proof of Concept code is on <a href="https://github.com/bnovkebin/bnovkebin.github.io/blob/5f951163790653ce1426d0ac8427a8b170c22ca7/_posts/2024/20240814/poc.js">here</a>
+The Proof of Concept code is on <a href="https://github.com/bnovkebin/bnovkebin.github.io/blob/5f951163790653ce1426d0ac8427a8b170c22ca7/_posts/2024/20240814/poc.js" target="_blank">here</a>
 <br />
 If you run this code, it results :</p>
 <div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">$</span> <span class="o">~/</span><span class="n">v8</span><span class="o">/</span><span class="n">out</span><span class="err">$</span> <span class="p">.</span><span class="o">/</span><span class="n">debug</span><span class="o">/</span><span class="n">d8</span> <span class="o">--</span><span class="n">max</span><span class="o">-</span><span class="n">opt</span><span class="o">=</span><span class="mi">2</span> <span class="o">--</span><span class="n">allow</span><span class="o">-</span><span class="n">natives</span><span class="o">-</span><span class="n">syntax</span> <span class="o">--</span><span class="n">expose</span><span class="o">-</span><span class="n">gc</span> <span class="o">--</span><span class="n">jit</span><span class="o">-</span><span class="n">fuzzing</span> <span class="p">.</span><span class="o">/</span><span class="n">code0810</span><span class="o">/</span><span class="n">poc</span><span class="p">.</span><span class="n">js</span>
