@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.3.3">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2024-08-15T15:39:40+09:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">Minkyun Sung</title><subtitle>Be a good Hacker</subtitle><author><name>Minkyun Sung</name><email>bnovkebin@gmail.com</email></author><entry><title type="html">CVE-2024-0517 Chrome V8 Out of Bounds Write</title><link href="http://localhost:4000/blog/CVE-2024-0517/" rel="alternate" type="text/html" title="CVE-2024-0517 Chrome V8 Out of Bounds Write" /><published>2024-08-14T00:00:00+09:00</published><updated>2024-08-14T00:00:00+09:00</updated><id>http://localhost:4000/blog/CVE-2024-0517</id><content type="html" xml:base="http://localhost:4000/blog/CVE-2024-0517/"><![CDATA[<p><br /></p>
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.3.3">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2024-08-15T16:59:02+09:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">Minkyun Sung</title><subtitle>Be a good Hacker</subtitle><author><name>Minkyun Sung</name><email>bnovkebin@gmail.com</email></author><entry><title type="html">CVE-2024-0517 Chrome V8 Out of Bounds Write</title><link href="http://localhost:4000/blog/CVE-2024-0517/" rel="alternate" type="text/html" title="CVE-2024-0517 Chrome V8 Out of Bounds Write" /><published>2024-08-14T00:00:00+09:00</published><updated>2024-08-14T00:00:00+09:00</updated><id>http://localhost:4000/blog/CVE-2024-0517</id><content type="html" xml:base="http://localhost:4000/blog/CVE-2024-0517/"><![CDATA[<p><br /></p>
 <h1 id="introduction">Introduction</h1>
 <p>In this blog, we look into a vulnerability in Chrome V8, CVE-2024-0517. This vulnerability occurs when Maglev, the JIT compiler of V8, compiles a class that has a parent class. <br />
 Since I’m a beginner in the cybersecurity field and this is my first time analyzing a 1-day exploit, I had a lot of difficulty understanding it. Therefore, I’ll explain this vulnerability step by step. <br /></p>
@@ -140,17 +140,30 @@ This vulnerability was patched in version 12.0.267.16. You can verify this using
 <center> <img src="https://github.com/user-attachments/assets/61e0a27d-596c-49a7-82d8-e66a0c17f294" title="git_diff" /> </center>
 
 <p><br /></p>
-<h1 id="vulnerability-exploitation-flow">Vulnerability Exploitation Flow</h1>
+<h1 id="vulnerability-exploitation-flow--need-to-upload-images">Vulnerability Exploitation Flow / Need to upload images</h1>
+<p>To understand about vulnerability it will help that draw a flow. <br /><br />
+The Exploitation flow is : <br /></p>
 <ol>
-  <li>취약점 흐름 <br /></li>
+  <li>Execute javascript code on V8 engine</li>
+  <li>V8 convert source code to AST structure. In this part, Parser converts <strong>super();</strong> function as a call node with <strong>Super type</strong>.</li>
+  <li>Ignition calls <strong>“VisitCall”</strong> function when interpretes a call node. And as this node has super type, in the end Ignition makes an <strong>“FindNonDefaultConstructorOrContruct”</strong> instruction.</li>
+  <li>Since this source code is marked as “hot” code, Maglev starts to optimize and compile. Maglev puts a word “Visit” in front of instruction, and calls function in Maglev’s source code(i.e. VisitFindNonDefaultConstructorOrConstruct).</li>
+  <li>When Maglev builds an allocation of object, there is no initialization of <strong>“current_raw_allocation”</strong> pointer. That is a root cause of this vulnerability.</li>
+  <li>As seen at poc code, we will make a garbage collection with “[1]=dogc();” after allocation of x array, all alived objects are moved into old space.</li>
+  <li>Now it is turn to allocate a array. Given that the position to allocate x array has already decided with <strong>“this object + offset”</strong>, a array will be allocated in unintended address of memory (OOB Write).</li>
 </ol>
 
+<p><br /></p>
 <h1 id="exploitation">Exploitation</h1>
-<ol>
-  <li>exploit 전체 과정 요약 <br /></li>
-</ol>
+<p>Using an OOB wirte, we could make a type confusion between two objects(x array &amp; a array) with different types. <br />
+The first one has a PACKED_ELEMENTS type. And the other one has a PACKED_DOUBLE_ELEMENTS type. <br />
+An array object that has PACKED_ELEMENTS stores Object or Integer. <br />
+Same thing with PACKED_DOUBLE_ELEMENTS stores Float value. <br />
+We know that their elements have same address in heap. Furthermore an overlapped memory is read differently. If we store an object at x[0], x array reads that memory as an object. However a array reads as a float value, that means we could leak the address of stored object.<br /></p>
 
 <h2 id="triggering-the-vulnarability">Triggering the Vulnarability</h2>
+<p>I used the code on exodus blog. For the reason that doesn’t trigger well the vulnerability, I tried to change number of times and size of array for garbage collection. <br />
+After triggered vulnerability, memory structure in our environment is as follows : <br /></p>
 
 <h2 id="exploit-primitives">Exploit primitives</h2>
 <ol>
@@ -178,7 +191,9 @@ This vulnerability was patched in version 12.0.267.16. You can verify this using
 <h1 id="conclusion">Conclusion</h1>
 <ol>
   <li>내가 이 글을 쓰는 목표한 바, 어떤 취약점이였는지 총정리 <br /></li>
-</ol>]]></content><author><name>Minkyun Sung</name><email>bnovkebin@gmail.com</email></author><category term="blog" /><category term="1-day" /><category term="chrome" /><category term="v8" /><summary type="html"><![CDATA[A deep dive about CVE-2024-0517]]></summary></entry><entry><title type="html">Second post with Front-Matter</title><link href="http://localhost:4000/blog/second_post/" rel="alternate" type="text/html" title="Second post with Front-Matter" /><published>2024-08-13T00:00:00+09:00</published><updated>2024-08-14T00:00:00+09:00</updated><id>http://localhost:4000/blog/second_post</id><content type="html" xml:base="http://localhost:4000/blog/second_post/"><![CDATA[<h1 id="1-first-index">1. first index</h1>
+</ol>
+
+<h1 id="preferences">Preferences</h1>]]></content><author><name>Minkyun Sung</name><email>bnovkebin@gmail.com</email></author><category term="blog" /><category term="1-day" /><category term="chrome" /><category term="v8" /><summary type="html"><![CDATA[A deep dive about CVE-2024-0517]]></summary></entry><entry><title type="html">Second post with Front-Matter</title><link href="http://localhost:4000/blog/second_post/" rel="alternate" type="text/html" title="Second post with Front-Matter" /><published>2024-08-13T00:00:00+09:00</published><updated>2024-08-14T00:00:00+09:00</updated><id>http://localhost:4000/blog/second_post</id><content type="html" xml:base="http://localhost:4000/blog/second_post/"><![CDATA[<h1 id="1-first-index">1. first index</h1>
 <p>hi~ <br />
 2~~ <br /></p>
 <h2 id="1-1-index">1-1. index</h2>
