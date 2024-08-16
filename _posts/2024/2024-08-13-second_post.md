@@ -12,6 +12,8 @@ toc_sticky: true //right side bar follows always
  
 //date: 2024-08-13 이 설정을 하면 직접 날짜를 설정할 수 있고, 없을 경우 실제로 업로드한 날짜가 올라간다.
 last_modified_at: 2024-08-14
+
+published: false
 ---
 # 1. first index
 hi~ <br>
