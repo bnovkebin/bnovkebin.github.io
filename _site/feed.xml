@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.3.3">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2024-08-15T23:58:47+09:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">Minkyun Sung</title><subtitle>Be a good Hacker</subtitle><author><name>Minkyun Sung</name><email>bnovkebin@gmail.com</email></author><entry><title type="html">CVE-2024-0517 Chrome V8 Out of Bounds Write</title><link href="http://localhost:4000/blog/CVE-2024-0517/" rel="alternate" type="text/html" title="CVE-2024-0517 Chrome V8 Out of Bounds Write" /><published>2024-08-14T00:00:00+09:00</published><updated>2024-08-14T00:00:00+09:00</updated><id>http://localhost:4000/blog/CVE-2024-0517</id><content type="html" xml:base="http://localhost:4000/blog/CVE-2024-0517/"><![CDATA[<p><br /></p>
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.3.3">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2024-08-16T11:57:38+09:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">Minkyun Sung</title><subtitle>Be a good Hacker</subtitle><author><name>Minkyun Sung</name><email>bnovkebin@gmail.com</email></author><entry><title type="html">CVE-2024-0517 Chrome V8 Out of Bounds Write</title><link href="http://localhost:4000/blog/CVE-2024-0517/" rel="alternate" type="text/html" title="CVE-2024-0517 Chrome V8 Out of Bounds Write" /><published>2024-08-14T00:00:00+09:00</published><updated>2024-08-14T00:00:00+09:00</updated><id>http://localhost:4000/blog/CVE-2024-0517</id><content type="html" xml:base="http://localhost:4000/blog/CVE-2024-0517/"><![CDATA[<p><br /></p>
 <h1 id="introduction">Introduction</h1>
 <p>In this blog, we look into a vulnerability in Chrome V8, CVE-2024-0517. This vulnerability occurs when Maglev, the JIT compiler of V8, compiles a class that has a parent class. <br />
 Since I’m a beginner in the cybersecurity field and this is my first time analyzing a 1-day exploit, I had a lot of difficulty understanding it. Therefore, I’ll explain this vulnerability step by step. <br /></p>
@@ -176,10 +176,10 @@ We know that their elements have same address in heap. Furthermore an overlapped
 After triggered vulnerability, memory structure in our environment is same with <a href="https://github.com/user-attachments/assets/61a32f48-8f3c-408c-8e2b-b26f514b7a91">this</a> that I uploaded on Exploitation. <br /></p>
 
 <h2 id="exploit-primitives">Exploit primitives</h2>
-<ol>
-  <li>exploit primitives <br /></li>
-</ol>
+<p>Now we made an OOB write in heap, using that we will implement some primitives that lead to exploit. <br />
+Before analyzing the full-exploit code is <a href="https://github.com/bnovkebin/bnovkebin.github.io/blob/5f951163790653ce1426d0ac8427a8b170c22ca7/_posts/2024/20240814/exploit.js" target="_blank">here</a> <br /></p>
 
+<p><br /></p>
 <h3 id="addrof">addrof</h3>
 
 <h3 id="write">write</h3>
